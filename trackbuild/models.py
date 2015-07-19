@@ -75,7 +75,7 @@ class Release(TimestampMixin, models.Model):
         elif major and (isinstance(major, int) or major.isdigit()):
             new_release.major = major 
         else:
-            new_release = release.major
+            new_release.major = release.major
         if minor == "+":
             new_release.minor = release.minor + 1 
         elif minor and (isinstance(minor, int) or minor.isdigit()):
@@ -133,6 +133,9 @@ class Build(TimestampMixin, models.Model):
         if not self.buildno:
             self.buildno = self.max_count
         super(Build, self).save(*args, **kwargs)
+        
+    def __unicode__(self):
+        return u'%s %s' % (self.release, self.buildno) 
         
         
 class BuildCounter(models.Model):

@@ -145,9 +145,9 @@ class ResourceTests(ResourceTestCase):
         # add a new product 
         result = self.service(product='test2', release='test1',  
                               full=True, filename=True, major=0, minor=1, patch=0)
-        self.assertEqual(result['msg'], 'test2-test1-0.1.0-002')
-        self.assertEqual(result['release'], u'/api/v1/trackbuild/release/1/')
-        self.assertEqual(result['build'], u'/api/v1/trackbuild/build/4/')
+        self.assertEqual(result['msg'], 'test2-test1-0.1.0-000')
+        self.assertEqual(result['release'], u'/api/v1/trackbuild/release/4/')
+        
         
     def service(self, **opts):
         resp = self.api_client.get(self.getURL('service'), format='json',

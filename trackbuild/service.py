@@ -20,16 +20,15 @@ class BuildTracker:
             (major, minor, patch) = self.get_full_version(release)
             print "Release %s.%s.%s has %d builds" % (major, minor, patch, release.builds.count())
             for build in release.builds.all():
-                print self.format(release, build, full=True)
-        return 'releases listed'
+                yield build
                 
     def get_release(self, release, product=None, major=None, minor=None, patch=None):
         if isinstance(release, Release):
             return release
-        z = lambda v : v if v != "+" else None
+        z = lambda v : v if v and v != "+" else v 
         opts = dict(major=z(major), minor=z(minor), patch=z(patch), 
                     product=product)
-        opts = { k:v for k,v in opts.iteritems() if v}
+        opts = { k:v for k,v in opts.iteritems() if v is not None}
         return self.releases.filter(name=release, user=self.user, 
                                     **opts).latest()
         
@@ -58,8 +57,9 @@ class BuildTracker:
         if base_release:
             return Release.from_release(base_release, name=release, major=major, 
                                     minor=minor, patch=patch)
-        product_opts = dict(name=product or release, user=self.user)
-        product, cr_product = Product.objects.get_or_create(**product_opts) 
+        if not isinstance(product, Product):
+            product_opts = dict(name=product or release, user=self.user)
+            product, cr_product = Product.objects.get_or_create(**product_opts) 
         release_opts = dict(name=release, major=major, 
                             minor=minor, patch=patch,
                             product=product, user=self.user)
@@ -137,6 +137,9 @@ class BuildTracker:
         product = None
         release = None
         build = None
+        fmtopts = dict(filename=args.filename, 
+                       nice=args.nice, display=args.display,
+                       full=args.full, date=args.date)
         if args.product:
             product = tracker.add_product(args.product)
         if not args.release:
@@ -151,6 +154,7 @@ class BuildTracker:
                                           major=args.major, minor=args.minor, 
                                           patch=args.patch, product=product)
         else:
+            # get existing release
             try:
                 release = self.get_release(args.release, major=args.major, 
                                                          minor=args.minor, 
@@ -160,17 +164,19 @@ class BuildTracker:
                 return (product, release, build, "Release not yet created. Try without --build")
             
         if args.list:
-            return (product, release, build, self.list_builds(release=args.release, product=args.product))
+            builds = self.list_builds(release=args.release, product=args.product)
+            for build in builds:
+                print self.format(build=build, **fmtopts)
+            return (product, release, build, "All Builds listed.")
         if args.build:
             if not args.release:
                 return (product, release, build, "No release specified")
             build = tracker.add_build(release, args.tag)
+            print build, build.release, release
             if not any([args.full, args.display, args.nice]):
                 return (product, release, build, tracker.format(release, build=True))
         if not release and not build:
                 return (product, release, build, "No release specified or no build created.")
-        return (product, release, build, self.format(release, build, filename=args.filename, 
-                           nice=args.nice, display=args.display,
-                           full=args.full, date=args.date))
+        return (product, release, build, self.format(release, build, **fmtopts))
         
     
