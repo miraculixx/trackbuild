@@ -16,13 +16,12 @@ class BuildTracker:
         
     def list_builds(self, release=None, product=None):
         # if specific release given, get its builds
-        builds = self.releases.filter(name=release).builds.all()
-        (major, minor, patch) = self.get_full_version(release)
-        print "Release %s.%s.%s has %d builds" % (major, minor, patch, len(builds))
-        for build in builds:
-            for item in build:
-                print "  %s = %s" % (item, build[item])
-            print '---'
+        for release in Release.objects.filter(name=release, user=self.user):
+            (major, minor, patch) = self.get_full_version(release)
+            print "Release %s.%s.%s has %d builds" % (major, minor, patch, release.builds.count())
+            for build in release.builds.all():
+                print self.format(release, build, full=True)
+        return 'releases listed'
                 
     def get_release(self, release, product=None, major=None, minor=None, patch=None):
         if isinstance(release, Release):
@@ -161,7 +160,7 @@ class BuildTracker:
                 return (product, release, build, "Release not yet created. Try without --build")
             
         if args.list:
-            return self.list_builds(release=args.release, product=args.product)
+            return (product, release, build, self.list_builds(release=args.release, product=args.product))
         if args.build:
             if not args.release:
                 return (product, release, build, "No release specified")
