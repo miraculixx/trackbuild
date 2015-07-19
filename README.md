@@ -31,7 +31,7 @@ trackbuild solves this problem once and for all.
         #trackbuild -r alpha -b
         001
 
-    You have now added the first build to release alpha. trackbuild incremenes the build number and prints it as a 3-character string. 
+    You have now added the first build to release alpha. trackbuild increments the build number and prints it as a 3-character string. 
 
 ###Listing builds
 
@@ -68,11 +68,6 @@ Print major.minor.patch string
         #trackbuild -r alpha --nice
         0.1.0
 
-Print release major.minor.patch string
-
-        #trackbuild -r alpha --nice
-        0.1.0
-
 Print release major.minor.patch build nnn
 
        #trackbuild -r alpha --full
@@ -86,7 +81,7 @@ Print release major.minor.patch (no build number)
 
 ###Print file names
 
-Often times we need the release information as a filename. To do so, pass --filename (or -i) along with any of the above --nice, --full, --display arguments:
+Often times we need the version suitable as a filename. To do so, pass --filename (or -i) along with any of the above --nice, --full, --display arguments:
 
         #trackbuild -r alpha --nice --filename
         0.1.0
