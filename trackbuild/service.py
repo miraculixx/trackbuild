@@ -4,10 +4,16 @@ Created on Jul 18, 2015
 @author: patrick
 '''
 import argparse
-from trackbuild.models import Release, Build, Product
+import pprint
+
 from django.utils import timezone
 
+from trackbuild.models import Release, Build, Product
+
+
 builds = {}
+
+z = lambda v, d=None : v if (v is not None and ('%s' % v)[0] != "+") else d 
 
 class BuildTracker:
     def __init__(self, user):
@@ -18,18 +24,19 @@ class BuildTracker:
         # if specific release given, get its builds
         for release in Release.objects.filter(name=release, user=self.user):
             (major, minor, patch) = self.get_full_version(release)
-            print "Release %s.%s.%s has %d builds" % (major, minor, patch, release.builds.count())
+            print "Product %s Release %s.%s.%s has %d builds" % (release.product.name, 
+                                                                 major, minor, patch, release.builds.count())
             for build in release.builds.all():
                 yield build
                 
     def get_release(self, release, product=None, major=None, minor=None, patch=None):
         if isinstance(release, Release):
             return release
-        z = lambda v : v if v and v != "+" else v 
         opts = dict(major=z(major), minor=z(minor), patch=z(patch), 
                     product=product)
         opts = { k:v for k,v in opts.iteritems() if v is not None}
-        return self.releases.filter(name=release, user=self.user, 
+        print opts
+        return Release.objects.filter(name=release, user=self.user, 
                                     **opts).latest()
         
     def get_full_version(self, release):
@@ -59,10 +66,11 @@ class BuildTracker:
                                     minor=minor, patch=patch)
         if not isinstance(product, Product):
             product_opts = dict(name=product or release, user=self.user)
-            product, cr_product = Product.objects.get_or_create(**product_opts) 
+            product, cr_product = Product.objects.get_or_create(**product_opts)
         release_opts = dict(name=release, major=major, 
                             minor=minor, patch=patch,
                             product=product, user=self.user)
+        release_opts = { k : v for k,v in release_opts.iteritems() if v}
         release, cr_release = Release.objects.get_or_create(**release_opts)
         return release
         
@@ -144,16 +152,25 @@ class BuildTracker:
             product = tracker.add_product(args.product)
         if not args.release:
             return (product, release, build, "No release specified")
-        if not args.build and not any([args.major, args.minor, args.patch]):
+        try:
+            # see if we know this release
+            release = self.get_release(args.release, product=product,
+                                       major=args.major, 
+                                       minor=args.minor, 
+                                       patch=args.patch)
+        except Release.DoesNotExist:
+            release = None
+        if not release and not args.build and not any([args.major, args.minor, args.patch]):
             release = tracker.add_release(args.release, product=args.product)
-        elif not args.build:
-            base_release = product.get_latest_release(major=args.major, 
-                                                      minor=args.minor, 
-                                                      patch=args.patch) 
-            release = tracker.add_release(args.release, base_release=base_release, 
+        elif release and not args.build and any([args.major, args.minor, args.patch]):
+            release = tracker.add_release(args.release, base_release=release, 
                                           major=args.major, minor=args.minor, 
                                           patch=args.patch, product=product)
-        else:
+        elif not release and not args.build and any([args.major, args.minor, args.patch]):
+            release = tracker.add_release(args.release, base_release=release, 
+                                          major=args.major, minor=args.minor, 
+                                          patch=args.patch, product=product)
+        elif args.build:
             # get existing release
             try:
                 release = self.get_release(args.release, major=args.major, 
@@ -172,7 +189,7 @@ class BuildTracker:
             if not args.release:
                 return (product, release, build, "No release specified")
             build = tracker.add_build(release, args.tag)
-            print build, build.release, release
+            fmtopts['full'] = True
             if not any([args.full, args.display, args.nice]):
                 return (product, release, build, tracker.format(release, build=True))
         if not release and not build:

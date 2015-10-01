@@ -27,7 +27,7 @@ class Product(TimestampMixin, models.Model):
     user = models.ForeignKey(User)
     
     def get_latest_release(self, major=None, minor=None, patch=None):
-        z = lambda v : v if v != "+" else None
+        z = lambda v : v if v and v != "+" else None 
         opts = dict(major=z(major), minor=z(minor), patch=z(patch))
         opts = { k:v for k,v in opts.iteritems() if v}
         try:
@@ -38,6 +38,9 @@ class Product(TimestampMixin, models.Model):
             return self.releases.latest()
         except:
             return None
+        
+    def __unicode__(self):
+        return u"%s %s" % (self.user, self.name or 'unknown')
     
 class Release(TimestampMixin, models.Model):
     class Meta:
@@ -96,7 +99,7 @@ class Release(TimestampMixin, models.Model):
         return self.__unicode__()
     
     def __unicode__(self):
-        return u"%s-%s %d.%d.%d" % (self.product.name, self.name, self.major, self.minor, self.patch) 
+        return u"%s-%s %d.%d.%d" % (self.product, self.name, self.major, self.minor, self.patch) 
     
     def save(self, *args, **kwargs):
         if not self.name:

@@ -32,7 +32,7 @@ class Command(BaseCommand):
                     help="set patch number (default: 0)", action="store"),
         make_option("--list", "-l", 
                     help="list release(s)", action="store_true"),
-        make_option("--nice", "-n", 
+        make_option("--nice", "-n", default=True,
                     help="print major.minor.patch", action="store_true"),
         make_option("--full", "-f", 
                     help="print <release> <major.minor.patch> build <buildno>", action="store_true"),

@@ -9,6 +9,7 @@ from tastypie.serializers import Serializer
 from trackbuild.models import Product, Release, Build
 from trackbuild.service import BuildTracker
 from util.trackbuild import TrackBuildArgs
+from tastypie.exceptions import ImmediateHttpResponse, BadRequest
 
 
 class LimitUserMixin(object):
@@ -75,7 +76,10 @@ class TrackBuildResource(Resource):
         bundle = self.build_bundle(request=request, data=request.GET)
         bt = BuildTracker(bundle.request.user)
         args = TrackBuildArgs(bundle.data)
-        product, release, build, msg = bt.processArgs(args)
+        try:
+            product, release, build, msg = bt.processArgs(args)
+        except:
+            raise BadRequest
         result = {
            'msg' : msg,
         }

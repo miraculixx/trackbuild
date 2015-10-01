@@ -106,44 +106,45 @@ class ResourceTests(ResourceTestCase):
         
     def test_service(self):
         # new release
-        result = self.service(product='test', release='test1', full=True)
+        resp, result = self.service(product='test', release='test1', full=True)
         self.assertEqual(result['msg'], 'test-test1 0.1.0 000')
         self.assertEqual(result['release'], u'/api/v1/trackbuild/release/1/')
         # try a new one
-        result = self.service(product='test', release='test2', full=True, 
+        resp, result = self.service(product='test', release='test2', full=True, 
                               filename=True)
         self.assertEqual(result['msg'], 'test-test2-0.1.0-000')
         self.assertEqual(result['release'], u'/api/v1/trackbuild/release/2/')
         # add a build
-        result = self.service(product='test', release='test1', build=True, 
+        resp, result = self.service(product='test', release='test1', build=True, 
                               full=True, filename=True)
         self.assertEqual(result['msg'], 'test-test1-0.1.0-001')
         self.assertEqual(result['release'], u'/api/v1/trackbuild/release/1/')
         self.assertEqual(result['build'], u'/api/v1/trackbuild/build/1/')
-        result = self.service(product='test', release='test1', build=True, 
+        resp, result = self.service(product='test', release='test1', build=True, 
                               full=True, filename=True)
         self.assertEqual(result['msg'], 'test-test1-0.1.0-002')
         self.assertEqual(result['release'], u'/api/v1/trackbuild/release/1/')
         self.assertEqual(result['build'], u'/api/v1/trackbuild/build/2/')
         # new release major
-        result = self.service(product='test', release='test1', major='+', 
-                              full=True, filename=True, minor=5, patch=9)
-        self.assertEqual(result['msg'], 'test-test1-1.5.9-000')
+        resp, result = self.service(product='test', release='test1', major='+', 
+                              full=True, filename=True)
+        self.assertHttpOK(resp)
+        self.assertEqual(result['msg'], 'test-test1-1.1.0-000')
         self.assertEqual(result['release'], u'/api/v1/trackbuild/release/3/')
         # add a build to the latest release
-        result = self.service(product='test', release='test1', build=True, 
+        resp, result = self.service(product='test', release='test1', build=True, 
                               full=True, filename=True)
-        self.assertEqual(result['msg'], 'test-test1-1.5.9-001')
+        self.assertEqual(result['msg'], 'test-test1-1.1.0-001')
         self.assertEqual(result['release'], u'/api/v1/trackbuild/release/3/')
         self.assertEqual(result['build'], u'/api/v1/trackbuild/build/3/')
         # add a build to an existing release
-        result = self.service(product='test', release='test1', build=True, 
+        resp, result = self.service(product='test', release='test1', build=True, 
                               full=True, filename=True, major=0, minor=1, patch=0)
         self.assertEqual(result['msg'], 'test-test1-0.1.0-003')
         self.assertEqual(result['release'], u'/api/v1/trackbuild/release/1/')
         self.assertEqual(result['build'], u'/api/v1/trackbuild/build/4/')
         # add a new product 
-        result = self.service(product='test2', release='test1',  
+        resp, result = self.service(product='test2', release='test1',  
                               full=True, filename=True, major=0, minor=1, patch=0)
         self.assertEqual(result['msg'], 'test2-test1-0.1.0-000')
         self.assertEqual(result['release'], u'/api/v1/trackbuild/release/4/')
@@ -153,4 +154,4 @@ class ResourceTests(ResourceTestCase):
         resp = self.api_client.get(self.getURL('service'), format='json',
                                    data=opts, 
                                    authentication=self.credentials())
-        return self.deserialize(resp)
+        return resp, self.deserialize(resp)

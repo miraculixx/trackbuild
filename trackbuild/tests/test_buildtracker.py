@@ -111,7 +111,67 @@ class BuildTrackerTests(TestCase):
         self.assertEqual(release.patch, 0)
         self.assertEqual(release.builds.count(), 1)
         
-
+    def test_get_release_version(self):
+        # add a first release
+        product, release, build, msg = self.service(product='product1', 
+                                            release='test1')
+        self.assertEqual(release.product.name, product.name)
+        self.assertEqual(product.name, 'product1')
+        self.assertEqual(release.major, 0)
+        self.assertEqual(release.minor, 1)
+        self.assertEqual(release.patch, 0)
+        # check what we have
+        product, release, build, msg = self.service(product='product1', 
+                                            release='test1')
+        self.assertEqual(msg, '')
+        self.assertEqual(release.major, 0)
+        self.assertEqual(release.minor, 1)
+        self.assertEqual(release.patch, 0)
+        
+    def test_add_twice(self):
+        # add a first release
+        product, release, build, msg = self.service(product='product1', 
+                                            release='test1')
+        self.assertEqual(release.product.name, product.name)
+        self.assertEqual(product.name, 'product1')
+        self.assertEqual(release.major, 0)
+        self.assertEqual(release.minor, 1)
+        self.assertEqual(release.patch, 0)
+        # add a new release
+        product, release, build, msg = self.service(product='product1', 
+                                            release='test1', major="+")
+        self.assertEqual(release.product.name, product.name)
+        self.assertEqual(product.name, 'product1')
+        self.assertEqual(release.major, 1)
+        self.assertEqual(release.minor, 1)
+        self.assertEqual(release.patch, 0)
+        # add a new release
+        product, release, build, msg = self.service(product='product1', 
+                                            release='test1', minor="+")
+        self.assertEqual(release.product.name, product.name)
+        self.assertEqual(product.name, 'product1')
+        self.assertEqual(release.major, 1)
+        self.assertEqual(release.minor, 2)
+        self.assertEqual(release.patch, 0)
+        
+    def test_add_specific(self):
+        # add a specific release
+        product, release, build, msg = self.service(product='product1', 
+                                            release='test1', major=5)
+        self.assertEqual(release.product.name, product.name)
+        self.assertEqual(product.name, 'product1')
+        self.assertEqual(release.major, 5)
+        self.assertEqual(release.minor, 0)
+        self.assertEqual(release.patch, 0)
+        # add a specific minor release 
+        product, release, build, msg = self.service(product='product1', 
+                                            release='test1', major=5, minor=1)
+        self.assertEqual(release.product.name, product.name)
+        self.assertEqual(product.name, 'product1')
+        self.assertEqual(release.major, 5)
+        self.assertEqual(release.minor, 1)
+        self.assertEqual(release.patch, 0)
+        
         
     def service(self, **options):
         args = TrackBuildArgs(options)
